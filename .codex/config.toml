@@ -1,0 +1,14 @@
+# 创建配置文件
+cat > config.toml << 'EOF'
+model_provider = "duckcoding"
+model = "gpt-5-codex"
+model_reasoning_effort = "high"
+network_access = "enabled"
+disable_response_storage = true
+
+[model_providers.duckcoding]
+name = "duckcoding"
+base_url = "https://jp.duckcoding.com/v1"
+wire_api = "responses"
+requires_openai_auth = true
+EOF

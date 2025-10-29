@@ -1,0 +1,135 @@
+/* Element Plus Table 增强样式 */
+
+/* 表格整体美化 */
+.el-table {
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* 表头美化 */
+.el-table thead {
+  font-size: 14px;
+  letter-spacing: 0.3px;
+}
+
+.el-table th.el-table__cell {
+  padding: 16px 12px !important;
+  font-weight: 600 !important;
+  position: relative;
+}
+
+/* 表头分隔线 */
+.el-table th.el-table__cell::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 60%;
+  background: var(--border-primary);
+  opacity: 0.3;
+}
+
+.el-table th.el-table__cell:last-child::after {
+  display: none;
+}
+
+/* 表格行 */
+.el-table td.el-table__cell {
+  padding: 14px 12px !important;
+  transition: all 0.3s ease;
+}
+
+/* 悬停效果增强 */
+.el-table__body tr:hover > td.el-table__cell {
+  transform: scale(1.001);
+}
+
+/* 操作列按钮组 */
+.el-table .cell .el-button + .el-button {
+  margin-left: 8px;
+}
+
+/* Link按钮美化 */
+.el-table .el-button--text,
+.el-table .el-button.is-link {
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.el-table .el-button--text:hover,
+.el-table .el-button.is-link:hover {
+  background-color: rgba(255, 140, 0, 0.1);
+}
+
+/* 表格标签美化 */
+.el-table .el-tag {
+  border-radius: 6px;
+  font-weight: 500;
+  padding: 4px 10px;
+}
+
+/* 排序图标 */
+.el-table .caret-wrapper {
+  width: 20px;
+}
+
+.el-table .sort-caret {
+  border-color: var(--text-tertiary) transparent transparent !important;
+  transition: border-color 0.3s ease;
+}
+
+.el-table .sort-caret.ascending {
+  border-bottom-color: var(--color-primary) !important;
+}
+
+.el-table .sort-caret.descending {
+  border-top-color: var(--color-primary) !important;
+}
+
+/* 加载状态 */
+.el-table__body-wrapper .el-table__empty-block {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 暗色主题特殊优化 */
+[data-theme='dark'] .el-table {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark'] .el-table__body tr:hover > td.el-table__cell {
+  background-color: rgba(255, 140, 0, 0.1) !important;
+}
+
+[data-theme='dark'] .el-table th.el-table__cell {
+  background-color: #1a1a1a !important;
+}
+
+[data-theme='dark'] .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background-color: rgba(255, 140, 0, 0.02) !important;
+}
+
+/* 亮色主题优化 */
+[data-theme='light'] .el-table__body tr:hover > td.el-table__cell {
+  background-color: rgba(64, 158, 255, 0.05) !important;
+}
+
+[data-theme='light'] .el-table .el-button--text:hover,
+[data-theme='light'] .el-button.is-link:hover {
+  background-color: rgba(64, 158, 255, 0.1);
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .el-table th.el-table__cell,
+  .el-table td.el-table__cell {
+    padding: 10px 8px !important;
+    font-size: 13px;
+  }
+}

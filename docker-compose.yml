@@ -1,0 +1,53 @@
+# Docker Compose v1 格式
+mysql:
+  image: 10.90.8.250:81/web_container/mysql:latest
+  container_name: tool-dashboard-mysql
+  restart: always
+  environment:
+    - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    - MYSQL_DATABASE=${MYSQL_DATABASE}
+    - MYSQL_USER=${MYSQL_USER}
+    - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    - TZ=Asia/Shanghai
+  ports:
+    - "${MYSQL_PORT}:3306"
+  volumes:
+    - mysql_data:/var/lib/mysql
+    - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+  command:
+    - --character-set-server=utf8mb4
+    - --collation-server=utf8mb4_unicode_ci
+    - --default-authentication-plugin=mysql_native_password
+
+# 后端服务
+backend:
+  image: tool-dashboard-backend:latest
+  container_name: tool-dashboard-backend
+  restart: always
+  environment:
+    - DB_HOST=mysql
+    - DB_PORT=3306
+    - DB_NAME=${MYSQL_DATABASE}
+    - DB_USERNAME=${MYSQL_USER}
+    - DB_PASSWORD=${MYSQL_PASSWORD}
+    - JWT_SECRET=${JWT_SECRET}
+    - JWT_EXPIRATION=${JWT_EXPIRATION}
+    - FILE_UPLOAD_PATH=/app/uploads
+    - JAVA_OPTS=-Xms512m -Xmx1024m -XX:+UseG1GC
+  ports:
+    - "${BACKEND_PORT}:8080"
+  volumes:
+    - backend_uploads:/app/uploads
+    - backend_logs:/app/logs
+  links:
+    - mysql
+
+# 前端服务
+frontend:
+  image: tool-dashboard-frontend:latest
+  container_name: tool-dashboard-frontend
+  restart: always
+  ports:
+    - "${FRONTEND_PORT}:80"
+  links:
+    - backend
