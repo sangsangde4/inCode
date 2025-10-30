@@ -11,12 +11,14 @@ export const getFilePage = (params: { pageNum: number; pageSize: number; toolId?
   return request.get<PageResponse<ToolFile>>('/files/page', { params })
 }
 
-// 上传文件
-export const uploadFile = (formData: FormData) => {
+// 上传文件（支持进度回调）
+export const uploadFile = (formData: FormData, onUploadProgress?: (progressEvent: any) => void) => {
   return request.post<ToolFile>('/files/upload', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
-    }
+    },
+    timeout: 600000, // 10分钟超时，支持大文件上传
+    onUploadProgress: onUploadProgress
   })
 }
 

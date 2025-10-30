@@ -5,8 +5,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.company.tooldashboard.dto.ToolGroupDTO;
 import com.company.tooldashboard.entity.Tool;
+import com.company.tooldashboard.entity.ToolFile;
+import com.company.tooldashboard.mapper.ToolFileMapper;
 import com.company.tooldashboard.mapper.ToolMapper;
 import com.company.tooldashboard.service.ToolService;
+import com.company.tooldashboard.util.SemanticVersionUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -18,6 +22,9 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ToolServiceImpl extends ServiceImpl<ToolMapper, Tool> implements ToolService {
+    
+    @Autowired
+    private ToolFileMapper toolFileMapper;
     
     @Override
     public Page<Tool> getToolPage(Integer pageNum, Integer pageSize, String keyword) {
@@ -80,5 +87,48 @@ public class ToolServiceImpl extends ServiceImpl<ToolMapper, Tool> implements To
         }
         
         return result;
+    }
+    
+    @Override
+    public String getLatestVersion(String toolName) {
+        if (!StringUtils.hasText(toolName)) {
+            return null;
+        }
+        
+        // 根据工具名称查询工具
+        LambdaQueryWrapper<Tool> toolWrapper = new LambdaQueryWrapper<>();
+        toolWrapper.eq(Tool::getName, toolName);
+        Tool tool = this.getOne(toolWrapper);
+        
+        if (tool == null) {
+            return null;
+        }
+        
+        // 查询该工具的所有文件版本
+        LambdaQueryWrapper<ToolFile> fileWrapper = new LambdaQueryWrapper<>();
+        fileWrapper.eq(ToolFile::getToolId, tool.getId())
+                   .isNotNull(ToolFile::getVersion);
+        List<ToolFile> toolFiles = toolFileMapper.selectList(fileWrapper);
+        
+        if (toolFiles == null || toolFiles.isEmpty()) {
+            // 如果没有文件版本，返回工具当前版本
+            return tool.getCurrentVersion();
+        }
+        
+        // 找出所有有效的版本号，并排序找到最新版本
+        String latestVersion = null;
+        for (ToolFile file : toolFiles) {
+            String version = file.getVersion();
+            if (version != null && SemanticVersionUtil.isValidSemanticVersion(version)) {
+                if (latestVersion == null) {
+                    latestVersion = version;
+                } else if (SemanticVersionUtil.compareVersions(version, latestVersion) > 0) {
+                    latestVersion = version;
+                }
+            }
+        }
+        
+        // 如果找到了文件中的最新版本，返回它；否则返回工具的当前版本
+        return latestVersion != null ? latestVersion : tool.getCurrentVersion();
     }
 }

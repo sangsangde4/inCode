@@ -53,8 +53,9 @@
       v-model="dialogVisible"
       :title="dialogTitle"
       width="600px"
+      @close="handleDialogClose"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" style="margin-top: 20px;">
         <el-form-item label="工具名称" prop="name">
           <el-input v-model="form.name" />
         </el-form-item>
@@ -98,7 +99,7 @@
           <el-input v-model="form.accessUrl" />
         </el-form-item>
         <el-form-item label="当前版本" prop="currentVersion">
-          <el-input v-model="form.currentVersion" />
+          <el-input v-model="form.currentVersion" placeholder="如：1.0.0" />
         </el-form-item>
         <el-form-item label="负责人" prop="owner">
           <el-input v-model="form.owner" />
@@ -130,6 +131,7 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type Upload
 import { Plus } from '@element-plus/icons-vue'
 import { getToolPage, addTool, updateTool, deleteTool } from '@/api/tool'
 import { uploadIcon } from '@/api/upload'
+import { createVersionValidationRule } from '@/utils/semanticVersion'
 import type { Tool } from '@/types'
 
 const loading = ref(false)
@@ -159,7 +161,8 @@ const form = reactive<Tool>({
 })
 
 const rules: FormRules = {
-  name: [{ required: true, message: '请输入工具名称', trigger: 'blur' }]
+  name: [{ required: true, message: '请输入工具名称', trigger: 'blur' }],
+  currentVersion: [createVersionValidationRule(false)] // 当前版本可选
 }
 
 const loadData = async () => {
@@ -345,6 +348,10 @@ const handleImageError = () => {
   ElMessage.error('图标加载失败')
 }
 
+const handleDialogClose = () => {
+  resetForm()
+}
+
 onMounted(() => {
   loadData()
 })
@@ -384,12 +391,12 @@ onMounted(() => {
   padding: 12px 24px;
   border-radius: 10px;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(255,140,0,0.3);
+  box-shadow: 0 4px 12px rgba(0, 217, 255, 0.25);
 }
 
 .add-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255,140,0,0.4);
+  box-shadow: 0 6px 16px rgba(0, 217, 255, 0.35);
 }
 
 .table-card {
@@ -445,5 +452,12 @@ onMounted(() => {
   color: #909399;
   font-size: 12px;
   line-height: 1.8;
+}
+
+/* 状态标签优化 */
+[data-theme='dark'] .el-table .el-tag {
+  font-weight: 600;
+  padding: 4px 10px;
+  letter-spacing: 0.3px;
 }
 </style>

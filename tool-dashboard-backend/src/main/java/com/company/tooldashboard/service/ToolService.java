@@ -26,4 +26,12 @@ public interface ToolService extends IService<Tool> {
      * 按类型分组查询工具列表
      */
     List<ToolGroupDTO> getToolsByGroup();
+    
+    /**
+     * 获取指定工具的最新版本号
+     * 
+     * @param toolName 工具名称
+     * @return 最新版本号，如果工具不存在或没有版本信息则返回null
+     */
+    String getLatestVersion(String toolName);
 }

@@ -203,10 +203,11 @@ public class FileManagementController {
             @RequestParam("file") MultipartFile file,
             @RequestParam Long toolId,
             @RequestParam(required = false) String version,
+            @RequestParam(required = false) String architecture,
             @RequestParam(required = false) String description,
             @RequestParam(required = false) String uploader) {
         try {
-            ToolFile toolFile = fileManagementService.uploadFile(file, toolId, version, description, uploader);
+            ToolFile toolFile = fileManagementService.uploadFile(file, toolId, version, architecture, description, uploader);
             return Result.success(toolFile);
         } catch (Exception e) {
             logger.error("工具文件上传失败", e);

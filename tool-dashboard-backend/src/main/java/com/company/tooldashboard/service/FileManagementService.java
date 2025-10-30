@@ -28,7 +28,7 @@ public interface FileManagementService extends IService<ToolFile> {
     /**
      * 上传文件
      */
-    ToolFile uploadFile(MultipartFile file, Long toolId, String version, String description, String uploader);
+    ToolFile uploadFile(MultipartFile file, Long toolId, String version, String architecture, String description, String uploader);
     
     /**
      * 增加下载次数

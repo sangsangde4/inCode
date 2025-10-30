@@ -15,13 +15,14 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
   
-  # 文件上传配置
+  # 文件上传配置（支持大文件）
   servlet:
     multipart:
       enabled: true
-      max-file-size: 100MB
-      max-request-size: 100MB
-      file-size-threshold: 0
+      max-file-size: 2GB       # 单个文件最大2GB
+      max-request-size: 2GB    # 单次请求最大2GB
+      file-size-threshold: 10MB # 超过10MB使用临时文件
+      location: ${java.io.tmpdir}/upload-temp  # 临时文件目录
 
 # 服务器配置
 server:
@@ -31,6 +32,13 @@ server:
   tomcat:
     max-threads: 200
     min-spare-threads: 10
+    connection-timeout: 300000      # 连接超时5分钟
+    max-http-header-size: 8192     # 最大请求头8KB
+    max-swallow-size: -1           # 不限制请求体大小
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
 
 # MyBatis-Plus配置
 mybatis-plus:

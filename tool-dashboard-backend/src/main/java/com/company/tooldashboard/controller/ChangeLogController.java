@@ -6,8 +6,10 @@ import com.company.tooldashboard.common.Result;
 import com.company.tooldashboard.entity.ChangeLog;
 import com.company.tooldashboard.service.ChangeLogService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 /**
@@ -15,6 +17,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/changelogs")
+@Validated
 public class ChangeLogController {
     
     @Autowired
@@ -46,7 +49,7 @@ public class ChangeLogController {
      */
     @RequireAdmin
     @PostMapping
-    public Result<Void> addChangeLog(@RequestBody ChangeLog changeLog) {
+    public Result<Void> addChangeLog(@Valid @RequestBody ChangeLog changeLog) {
         changeLogService.save(changeLog);
         return Result.success();
     }
@@ -56,7 +59,7 @@ public class ChangeLogController {
      */
     @RequireAdmin
     @PutMapping("/{id}")
-    public Result<Void> updateChangeLog(@PathVariable Long id, @RequestBody ChangeLog changeLog) {
+    public Result<Void> updateChangeLog(@PathVariable Long id, @Valid @RequestBody ChangeLog changeLog) {
         changeLog.setId(id);
         changeLogService.updateById(changeLog);
         return Result.success();

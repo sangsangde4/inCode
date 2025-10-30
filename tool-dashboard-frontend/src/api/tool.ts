@@ -35,3 +35,8 @@ export const updateTool = (id: number, data: Tool) => {
 export const deleteTool = (id: number) => {
   return request.delete(`/tools/${id}`)
 }
+
+// 获取指定工具的最新版本号
+export const getLatestVersion = (toolName: string) => {
+  return request.get<string>('/tools/latest-version', { params: { toolName } })
+}

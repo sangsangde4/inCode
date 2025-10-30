@@ -33,6 +33,7 @@ CREATE TABLE `tb_tool_file` (
   `file_size` bigint(20) DEFAULT NULL COMMENT '文件大小（字节）',
   `file_type` varchar(100) DEFAULT NULL COMMENT '文件类型',
   `version` varchar(50) DEFAULT NULL COMMENT '版本号',
+  `architecture` varchar(50) DEFAULT NULL COMMENT '架构类型（如：linux_x64, windows_x64, macos_arm64等）',
   `download_count` int(11) DEFAULT '0' COMMENT '下载次数',
   `description` varchar(500) DEFAULT NULL COMMENT '文件说明',
   `uploader` varchar(50) DEFAULT NULL COMMENT '上传者',

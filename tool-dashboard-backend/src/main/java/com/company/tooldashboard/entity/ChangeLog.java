@@ -1,6 +1,7 @@
 package com.company.tooldashboard.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.company.tooldashboard.validation.SemanticVersion;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -22,6 +23,7 @@ public class ChangeLog {
     /**
      * 版本号
      */
+    @SemanticVersion(message = "版本号格式不正确，必须符合语义化版本规范（如：1.0.0）")
     private String version;
     
     /**

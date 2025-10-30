@@ -342,8 +342,8 @@ onMounted(() => {
   right: 0;
   bottom: 0;
   background-image: 
-    radial-gradient(circle at 20% 50%, rgba(255,140,0,0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(255,140,0,0.08) 0%, transparent 50%);
+    radial-gradient(circle at 20% 50%, rgba(0, 217, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(102, 126, 234, 0.06) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -379,7 +379,7 @@ onMounted(() => {
 }
 
 .theme-toggle:hover {
-  background: rgba(255, 140, 0, 0.3) !important;
+  background: rgba(0, 217, 255, 0.2) !important;
   border-color: var(--color-primary) !important;
   transform: rotate(180deg);
 }
@@ -405,7 +405,7 @@ onMounted(() => {
 
 .logo-icon:hover {
   transform: scale(1.05) rotate(5deg);
-  background: rgba(255,140,0,0.3);
+  background: rgba(0, 217, 255, 0.2);
 }
 
 .logo-text h1 {
@@ -443,7 +443,7 @@ onMounted(() => {
 .stat-icon {
   width: 48px;
   height: 48px;
-  background: rgba(255,140,0,0.2);
+  background: rgba(0, 217, 255, 0.15);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -452,7 +452,7 @@ onMounted(() => {
 }
 
 .stat-item:hover .stat-icon {
-  background: rgba(255,140,0,0.3);
+  background: rgba(0, 217, 255, 0.25);
   transform: scale(1.1) rotate(360deg);
 }
 
@@ -533,7 +533,7 @@ onMounted(() => {
 .group-header {
   margin-bottom: 28px;
   padding: 20px 24px;
-  background: linear-gradient(135deg, rgba(255,140,0,0.1) 0%, rgba(255,140,0,0.04) 100%);
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.08) 0%, rgba(102, 126, 234, 0.04) 100%);
   border-radius: 16px;
   border-left: 5px solid var(--color-primary);
   box-shadow: 
@@ -551,7 +551,7 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,140,0,0.05) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(0, 217, 255, 0.05) 50%, transparent 100%);
   transform: translateX(-100%);
   transition: transform 0.6s ease;
 }
@@ -562,7 +562,7 @@ onMounted(() => {
 
 .group-header:hover {
   box-shadow: 
-    0 4px 16px rgba(255,140,0,0.2),
+    0 4px 16px rgba(0, 217, 255, 0.15),
     inset 0 1px 0 rgba(255,255,255,0.08);
   transform: translateX(6px);
   border-left-width: 6px;
@@ -583,7 +583,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 0 4px 12px rgba(255,140,0,0.3);
+  box-shadow: 0 4px 12px rgba(0, 217, 255, 0.25);
 }
 
 .group-info {
@@ -641,7 +641,7 @@ onMounted(() => {
   inset: -2px;
   border-radius: 16px;
   padding: 2px;
-  background: linear-gradient(135deg, rgba(255,140,0,0.3) 0%, rgba(255,102,0,0.1) 100%);
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.3) 0%, rgba(102, 126, 234, 0.1) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -660,7 +660,7 @@ onMounted(() => {
   right: 0;
   width: 120px;
   height: 120px;
-  background: radial-gradient(circle, rgba(255,140,0,0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(0, 217, 255, 0.08) 0%, transparent 70%);
   pointer-events: none;
   transition: all 0.4s ease;
   z-index: 0;
@@ -669,10 +669,10 @@ onMounted(() => {
 .tool-card:hover {
   transform: translateY(-12px) scale(1.02);
   box-shadow: 
-    0 20px 40px rgba(255,140,0,0.25),
+    0 20px 40px rgba(0, 217, 255, 0.2),
     0 10px 20px rgba(0,0,0,0.2),
-    0 0 0 1px rgba(255,140,0,0.1) inset !important;
-  border-color: rgba(255,140,0,0.5) !important;
+    0 0 0 1px rgba(0, 217, 255, 0.15) inset !important;
+  border-color: rgba(0, 217, 255, 0.4) !important;
 }
 
 .tool-card:hover .tool-card-bg {
@@ -700,7 +700,7 @@ onMounted(() => {
 .icon-wrapper {
   position: relative;
   padding: 10px;
-  background: linear-gradient(135deg, rgba(255,140,0,0.12) 0%, rgba(255,140,0,0.06) 100%);
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.12) 0%, rgba(102, 126, 234, 0.06) 100%);
   border-radius: 20px;
   transition: all 0.3s ease;
   box-shadow: 
@@ -710,9 +710,9 @@ onMounted(() => {
 
 .tool-card:hover .icon-wrapper {
   transform: scale(1.08) rotate(-2deg);
-  background: linear-gradient(135deg, rgba(255,140,0,0.18) 0%, rgba(255,140,0,0.1) 100%);
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.18) 0%, rgba(102, 126, 234, 0.1) 100%);
   box-shadow: 
-    0 6px 20px rgba(255,140,0,0.3),
+    0 6px 20px rgba(0, 217, 255, 0.25),
     inset 0 1px 0 rgba(255,255,255,0.15);
 }
 
@@ -745,19 +745,22 @@ onMounted(() => {
 
 .status-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  border-radius: 12px;
+  top: 12px;
+  right: 12px;
   font-size: 11px;
-  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  z-index: 2;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   gap: 4px;
-  box-shadow: 
-    0 4px 12px rgba(0,0,0,0.2),
-    0 0 0 3px var(--card-bg);
-  padding: 4px 10px;
-  backdrop-filter: blur(10px);
+}
+
+[data-theme='dark'] .status-badge {
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .tool-name {
@@ -779,7 +782,7 @@ onMounted(() => {
 
 .tool-card:hover .tool-name {
   color: var(--color-primary);
-  text-shadow: 0 2px 4px rgba(255,140,0,0.3);
+  text-shadow: 0 2px 4px rgba(0, 217, 255, 0.3);
   transform: translateY(-1px);
 }
 
@@ -839,7 +842,7 @@ onMounted(() => {
   justify-content: center;
   transition: all 0.3s ease;
   box-shadow: 
-    0 2px 8px rgba(255,140,0,0.3),
+    0 2px 8px rgba(0, 217, 255, 0.25),
     inset 0 1px 0 rgba(255,255,255,0.2);
   position: relative;
   overflow: hidden;
@@ -869,7 +872,7 @@ onMounted(() => {
 
 .tool-card:hover .tool-action {
   box-shadow: 
-    0 6px 16px rgba(255,140,0,0.5),
+    0 6px 16px rgba(0, 217, 255, 0.4),
     inset 0 1px 0 rgba(255,255,255,0.3);
   transform: scale(1.15) rotate(90deg);
 }

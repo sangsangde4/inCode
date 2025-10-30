@@ -3,7 +3,7 @@
     <div class="page-header">
       <div class="header-left">
         <h2>文件管理</h2>
-        <el-tag type="info" size="large">总计 {{ total }} 个文件</el-tag>
+        <el-tag type="info" size="large">总计 {{ tableData.length }} 个文件</el-tag>
       </div>
       <el-button type="primary" size="large" @click="dialogVisible = true" class="upload-btn">
         <el-icon><Upload /></el-icon>
@@ -12,53 +12,17 @@
     </div>
 
     <el-card class="table-card" shadow="never">
-
-      <el-table :data="tableData" v-loading="loading" stripe>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="toolId" label="工具ID" width="100" />
-        <el-table-column prop="originalName" label="文件名" min-width="200" />
-        <el-table-column prop="version" label="版本" width="100" />
-        <el-table-column prop="fileSize" label="文件大小" width="120">
-          <template #default="{ row }">
-            {{ formatFileSize(row.fileSize) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="downloadUrlByPath" label="下载路径" min-width="300" show-overflow-tooltip>
-          <template #default="{ row }">
-            <el-tag v-if="row.downloadUrlByPath" type="success" size="small">
-              {{ row.downloadUrlByPath }}
-            </el-tag>
-            <span v-else class="text-gray">-</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="downloadCount" label="下载次数" width="100" />
-        <el-table-column prop="uploader" label="上传者" width="120" />
-        <el-table-column prop="createTime" label="上传时间" width="180" />
-        <el-table-column label="操作" width="150" fixed="right">
-          <template #default="{ row }">
-            <el-button type="primary" link @click="handleDownload(row)">下载</el-button>
-            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="pageNum"
-          v-model:page-size="pageSize"
-          :total="total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          background
-          @size-change="loadData"
-          @current-change="loadData"
-        />
-      </div>
+      <FileBrowser 
+        :files="tableData" 
+        :loading="loading"
+        @download="handleDownload"
+        @delete="handleDelete"
+      />
     </el-card>
 
     <!-- 上传对话框 -->
-    <el-dialog v-model="dialogVisible" title="上传文件" width="600px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+    <el-dialog v-model="dialogVisible" title="上传文件" width="600px" @close="handleDialogClose">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" style="margin-top: 20px;">
         <el-form-item label="关联工具" prop="toolId">
           <el-select v-model="form.toolId" style="width: 100%" filterable>
             <el-option
@@ -70,7 +34,19 @@
           </el-select>
         </el-form-item>
         <el-form-item label="版本号" prop="version">
-          <el-input v-model="form.version" />
+          <el-input v-model="form.version" placeholder="如：1.0.0（必填）" />
+        </el-form-item>
+        <el-form-item label="架构类型" prop="architecture">
+          <el-select v-model="form.architecture" style="width: 100%" clearable placeholder="选择架构（可选）">
+            <el-option label="Linux x64" value="linux_x64" />
+            <el-option label="Linux ARM64" value="linux_arm64" />
+            <el-option label="Windows x64" value="windows_x64" />
+            <el-option label="Windows x86" value="windows_x86" />
+            <el-option label="Windows ARM64" value="windows_arm64" />
+            <el-option label="macOS x64 (Intel)" value="macos_x64" />
+            <el-option label="macOS ARM64 (Apple Silicon)" value="macos_arm64" />
+            <el-option label="通用 / 其他" value="universal" />
+          </el-select>
         </el-form-item>
         <el-form-item label="文件说明" prop="description">
           <el-input v-model="form.description" type="textarea" :rows="3" />
@@ -84,13 +60,29 @@
             :file-list="fileList"
           >
             <el-button type="primary">选择文件</el-button>
+            <template #tip>
+              <div class="el-upload__tip">
+                支持最大2GB文件上传
+              </div>
+            </template>
           </el-upload>
+        </el-form-item>
+        <el-form-item v-if="uploading && uploadProgress > 0">
+          <el-progress 
+            :percentage="uploadProgress" 
+            :status="uploadProgress === 100 ? 'success' : undefined"
+            :stroke-width="20"
+          >
+            <template #default="{ percentage }">
+              <span class="percentage-value">{{ percentage }}%</span>
+            </template>
+          </el-progress>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button @click="dialogVisible = false" :disabled="uploading">取消</el-button>
         <el-button type="primary" @click="handleSubmit" :loading="uploading">
-          上传
+          {{ uploading ? '上传中...' : '上传' }}
         </el-button>
       </template>
     </el-dialog>
@@ -103,17 +95,17 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type Upload
 import { getFilePage, uploadFile, deleteFile } from '@/api/file'
 import { getToolList } from '@/api/tool'
 import { useUserStore } from '@/stores/user'
+import { createVersionValidationRule } from '@/utils/semanticVersion'
+import FileBrowser from '@/components/FileBrowser.vue'
 import type { ToolFile, Tool } from '@/types'
 
 const userStore = useUserStore()
 const loading = ref(false)
 const uploading = ref(false)
+const uploadProgress = ref(0)
 const dialogVisible = ref(false)
 const formRef = ref<FormInstance>()
 
-const pageNum = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
 const tableData = ref<ToolFile[]>([])
 const tools = ref<Tool[]>([])
 const fileList = ref<UploadFile[]>([])
@@ -121,25 +113,27 @@ const fileList = ref<UploadFile[]>([])
 const form = reactive({
   toolId: undefined as number | undefined,
   version: '',
+  architecture: '',
   description: '',
   file: null as File | null
 })
 
 const rules: FormRules = {
   toolId: [{ required: true, message: '请选择工具', trigger: 'change' }],
+  version: [createVersionValidationRule(true)], // 版本号必填
   file: [{ required: true, message: '请选择文件', trigger: 'change' }]
 }
 
 const loadData = async () => {
   loading.value = true
   try {
+    // 获取所有文件（不分页）
     const res = await getFilePage({
-      pageNum: pageNum.value,
-      pageSize: pageSize.value
+      pageNum: 1,
+      pageSize: 10000 // 获取所有文件
     })
     if (res.data) {
       tableData.value = res.data.records
-      total.value = res.data.total
     }
   } catch (error) {
     console.error('加载数据失败', error)
@@ -157,14 +151,6 @@ const loadTools = async () => {
   } catch (error) {
     console.error('加载工具列表失败', error)
   }
-}
-
-const formatFileSize = (size?: number) => {
-  if (!size) return '-'
-  if (size < 1024) return size + ' B'
-  if (size < 1024 * 1024) return (size / 1024).toFixed(2) + ' KB'
-  if (size < 1024 * 1024 * 1024) return (size / 1024 / 1024).toFixed(2) + ' MB'
-  return (size / 1024 / 1024 / 1024).toFixed(2) + ' GB'
 }
 
 const handleFileChange = (file: UploadFile) => {
@@ -189,10 +175,18 @@ const handleSubmit = async () => {
       formData.append('file', form.file)
       formData.append('toolId', String(form.toolId))
       formData.append('version', form.version)
+      if (form.architecture) {
+        formData.append('architecture', form.architecture)
+      }
       formData.append('description', form.description)
       formData.append('uploader', userStore.realName)
       
-      await uploadFile(formData)
+      // 上传文件并显示进度
+      await uploadFile(formData, (progressEvent: any) => {
+        if (progressEvent.total) {
+          uploadProgress.value = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+        }
+      })
       ElMessage.success('上传成功')
       dialogVisible.value = false
       resetForm()
@@ -208,10 +202,16 @@ const handleSubmit = async () => {
 const resetForm = () => {
   form.toolId = undefined
   form.version = ''
+  form.architecture = ''
   form.description = ''
   form.file = null
   fileList.value = []
+  uploadProgress.value = 0
   formRef.value?.clearValidate()
+}
+
+const handleDialogClose = () => {
+  resetForm()
 }
 
 const handleDownload = (row: ToolFile) => {
@@ -290,12 +290,12 @@ onMounted(() => {
   padding: 12px 24px;
   border-radius: 10px;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(255,140,0,0.3);
+  box-shadow: 0 4px 12px rgba(0, 217, 255, 0.25);
 }
 
 .upload-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255,140,0,0.4);
+  box-shadow: 0 6px 16px rgba(0, 217, 255, 0.35);
 }
 
 .table-card {
@@ -313,5 +313,26 @@ onMounted(() => {
 .text-gray {
   color: #909399;
   font-size: 12px;
+}
+
+.el-upload__tip {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.percentage-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+/* 进度条样式优化 */
+.el-progress {
+  margin-top: 10px;
+}
+
+[data-theme='dark'] .el-progress__text {
+  color: var(--text-primary) !important;
 }
 </style>

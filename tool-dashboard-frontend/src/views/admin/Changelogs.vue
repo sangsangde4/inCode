@@ -48,8 +48,9 @@
       v-model="dialogVisible"
       :title="dialogTitle"
       width="600px"
+      @close="handleDialogClose"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" style="margin-top: 20px;">
         <el-form-item label="关联工具" prop="toolId">
           <el-select v-model="form.toolId" style="width: 100%" filterable>
             <el-option
@@ -61,7 +62,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="版本号" prop="version">
-          <el-input v-model="form.version" />
+          <el-input v-model="form.version" placeholder="如：1.0.0" />
         </el-form-item>
         <el-form-item label="变更类型" prop="changeType">
           <el-select v-model="form.changeType" style="width: 100%">
@@ -102,6 +103,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { getLogPage, addChangeLog, updateChangeLog, deleteChangeLog } from '@/api/changelog'
 import { getToolList } from '@/api/tool'
+import { createVersionValidationRule } from '@/utils/semanticVersion'
 import type { ChangeLog, Tool } from '@/types'
 
 const loading = ref(false)
@@ -117,7 +119,7 @@ const tableData = ref<ChangeLog[]>([])
 const tools = ref<Tool[]>([])
 
 const form = reactive<ChangeLog>({
-  toolId: 0,
+  toolId: undefined as any,
   version: '',
   changeType: '',
   content: '',
@@ -127,6 +129,7 @@ const form = reactive<ChangeLog>({
 
 const rules: FormRules = {
   toolId: [{ required: true, message: '请选择工具', trigger: 'change' }],
+  version: [createVersionValidationRule(false)], // 版本号可选
   content: [{ required: true, message: '请输入变更内容', trigger: 'blur' }]
 }
 
@@ -162,7 +165,7 @@ const loadTools = async () => {
 const resetForm = () => {
   Object.assign(form, {
     id: undefined,
-    toolId: 0,
+    toolId: undefined,
     version: '',
     changeType: '',
     content: '',
@@ -170,6 +173,10 @@ const resetForm = () => {
     changeTime: ''
   })
   formRef.value?.clearValidate()
+}
+
+const handleDialogClose = () => {
+  resetForm()
 }
 
 const handleAdd = () => {
@@ -265,12 +272,12 @@ onMounted(() => {
   padding: 12px 24px;
   border-radius: 10px;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(255,140,0,0.3);
+  box-shadow: 0 4px 12px rgba(0, 217, 255, 0.25);
 }
 
 .add-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255,140,0,0.4);
+  box-shadow: 0 6px 16px rgba(0, 217, 255, 0.35);
 }
 
 .table-card {

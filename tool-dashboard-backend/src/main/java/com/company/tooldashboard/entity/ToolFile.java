@@ -1,6 +1,7 @@
 package com.company.tooldashboard.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.company.tooldashboard.validation.SemanticVersion;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -47,7 +48,13 @@ public class ToolFile {
     /**
      * 版本号
      */
+    @SemanticVersion(message = "文件版本号格式不正确，必须符合语义化版本规范（如：1.0.0）", allowNull = false)
     private String version;
+    
+    /**
+     * 架构类型（如：linux_x64, windows_x64, macos_arm64等）
+     */
+    private String architecture;
     
     /**
      * 下载次数

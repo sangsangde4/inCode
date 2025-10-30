@@ -24,6 +24,7 @@ export interface ToolFile {
   fileSize?: number
   fileType?: string
   version?: string
+  architecture?: string            // 架构类型（如：linux_x64, windows_x64等）
   downloadCount?: number
   description?: string
   uploader?: string

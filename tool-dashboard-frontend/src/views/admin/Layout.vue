@@ -165,14 +165,14 @@ const handleLogout = () => {
 }
 
 .theme-toggle {
-  background: rgba(255, 140, 0, 0.1) !important;
+  background: rgba(0, 217, 255, 0.1) !important;
   border: 1px solid var(--border-primary) !important;
   color: var(--color-primary) !important;
   transition: all 0.3s ease;
 }
 
 .theme-toggle:hover {
-  background: rgba(255, 140, 0, 0.2) !important;
+  background: rgba(0, 217, 255, 0.2) !important;
   transform: rotate(180deg);
 }
 
@@ -187,7 +187,7 @@ const handleLogout = () => {
 }
 
 .user-info:hover {
-  background: rgba(255,140,0,0.1);
+  background: rgba(0, 217, 255, 0.1);
 }
 
 .el-main {
@@ -224,7 +224,7 @@ const handleLogout = () => {
 }
 
 .menu-item:hover {
-  background: rgba(255,140,0,0.1) !important;
+  background: rgba(0, 217, 255, 0.1) !important;
 }
 
 .menu-item:hover .menu-icon {
@@ -235,7 +235,7 @@ const handleLogout = () => {
 .menu-item.is-active {
   background: linear-gradient(135deg, var(--color-primary) 0%, #ff6600 100%) !important;
   color: white !important;
-  box-shadow: 0 4px 12px rgba(255,140,0,0.3);
+  box-shadow: 0 4px 12px rgba(0, 217, 255, 0.25);
 }
 
 .menu-item.is-active .menu-icon {

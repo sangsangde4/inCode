@@ -82,44 +82,13 @@
                 <el-badge :value="files.length" class="tab-badge" v-if="files.length > 0" />
               </div>
             </template>
-            <el-table :data="files" v-loading="filesLoading" stripe>
-              <el-table-column prop="originalName" label="文件名" min-width="200">
-                <template #default="{ row }">
-                  <div class="file-name">
-                    <el-icon class="file-icon"><DocumentCopy /></el-icon>
-                    <span>{{ row.originalName }}</span>
-                  </div>
-                </template>
-              </el-table-column>
-              <el-table-column prop="version" label="版本" width="120">
-                <template #default="{ row }">
-                  <el-tag size="small" type="info">{{ row.version }}</el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="fileSize" label="文件大小" width="120">
-                <template #default="{ row }">
-                  <span class="file-size">{{ formatFileSize(row.fileSize) }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column prop="downloadCount" label="下载次数" width="120">
-                <template #default="{ row }">
-                  <el-tag size="small" type="warning">
-                    <el-icon><Download /></el-icon>
-                    {{ row.downloadCount }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="createTime" label="上传时间" width="180" />
-              <el-table-column label="操作" width="120" fixed="right">
-                <template #default="{ row }">
-                  <el-button type="primary" size="small" @click="downloadFile(row)">
-                    <el-icon><Download /></el-icon>
-                    下载
-                  </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-            <el-empty v-if="files.length === 0" description="暂无文件" />
+            <FileBrowser 
+              :files="files" 
+              :loading="filesLoading"
+              :skip-levels="2"
+              @download="downloadFile"
+            />
+            <el-empty v-if="files.length === 0 && !filesLoading" description="暂无文件" />
           </el-tab-pane>
 
           <el-tab-pane name="changelogs">
@@ -174,6 +143,7 @@ import { getToolDetail } from '@/api/tool'
 import { getFilesByToolId, getDownloadUrl } from '@/api/file'
 import { getLogsByToolId } from '@/api/changelog'
 import { Link, CircleCheck, Warning, CircleClose, PriceTag, User, FolderOpened, Document, DocumentCopy, Download, Tickets, ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
+import FileBrowser from '@/components/FileBrowser.vue'
 import type { Tool, ToolFile, ChangeLog } from '@/types'
 
 const router = useRouter()
@@ -248,14 +218,6 @@ const getStatusText = (status?: number) => {
     case 2: return '维护中'
     default: return '未知'
   }
-}
-
-const formatFileSize = (size?: number) => {
-  if (!size) return '-'
-  if (size < 1024) return size + ' B'
-  if (size < 1024 * 1024) return (size / 1024).toFixed(2) + ' KB'
-  if (size < 1024 * 1024 * 1024) return (size / 1024 / 1024).toFixed(2) + ' MB'
-  return (size / 1024 / 1024 / 1024).toFixed(2) + ' GB'
 }
 
 const downloadFile = (fileOrId: ToolFile | number) => {
@@ -336,7 +298,7 @@ onMounted(() => {
 }
 
 .back-btn:hover {
-  background: rgba(255,140,0,0.3) !important;
+  background: rgba(0, 217, 255, 0.2) !important;
   transform: translateX(-4px);
 }
 
@@ -383,7 +345,7 @@ onMounted(() => {
   right: 0;
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, rgba(255,140,0,0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(0, 217, 255, 0.06) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -397,7 +359,7 @@ onMounted(() => {
 
 .avatar-wrapper {
   padding: 12px;
-  background: linear-gradient(135deg, rgba(255,140,0,0.1) 0%, rgba(255,140,0,0.05) 100%);
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.12) 0%, rgba(102, 126, 234, 0.06) 100%);
   border-radius: 20px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.1);
 }
@@ -439,6 +401,11 @@ onMounted(() => {
   font-weight: 600;
 }
 
+[data-theme='dark'] .status-tag {
+  letter-spacing: 0.5px;
+  font-size: 15px;
+}
+
 .tool-description {
   color: var(--text-secondary);
   margin: 0 0 20px 0;
@@ -459,11 +426,11 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: rgba(255,140,0,0.08);
+  background: rgba(0, 217, 255, 0.08);
   border-radius: 8px;
   font-size: 14px;
   color: var(--text-primary);
-  border: 1px solid rgba(255,140,0,0.15);
+  border: 1px solid rgba(0, 217, 255, 0.15);
 }
 
 .meta-item .el-icon {
@@ -481,12 +448,12 @@ onMounted(() => {
   padding: 12px 32px;
   font-size: 16px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(255,140,0,0.3);
+  box-shadow: 0 4px 12px rgba(0, 217, 255, 0.25);
 }
 
 .access-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255,140,0,0.4);
+  box-shadow: 0 6px 16px rgba(0, 217, 255, 0.35);
 }
 
 .content-card {
@@ -518,8 +485,8 @@ onMounted(() => {
 }
 
 .detail-tabs :deep(.el-tabs__item:hover) {
-  background: rgba(255,140,0,0.1) !important;
-  border-color: rgba(255,140,0,0.3) !important;
+  background: rgba(0, 217, 255, 0.1) !important;
+  border-color: rgba(0, 217, 255, 0.3) !important;
 }
 
 .detail-tabs :deep(.el-tabs__item.is-active) {
@@ -557,7 +524,15 @@ onMounted(() => {
 }
 
 .changelog-timeline {
-  padding: 20px 0;
+  padding: 20px 0 20px 20px;
+}
+
+.changelog-timeline :deep(.el-timeline-item__node) {
+  left: -1px;
+}
+
+.changelog-timeline :deep(.el-timeline-item__wrapper) {
+  padding-left: 28px;
 }
 
 .log-card {

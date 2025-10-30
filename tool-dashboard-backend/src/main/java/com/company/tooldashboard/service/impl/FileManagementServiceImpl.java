@@ -8,11 +8,13 @@ import com.company.tooldashboard.entity.ToolFile;
 import com.company.tooldashboard.mapper.ToolFileMapper;
 import com.company.tooldashboard.service.FileManagementService;
 import com.company.tooldashboard.service.ToolService;
+import com.company.tooldashboard.util.SemanticVersionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -68,9 +70,17 @@ public class FileManagementServiceImpl extends ServiceImpl<ToolFileMapper, ToolF
     }
     
     @Override
-    public ToolFile uploadFile(MultipartFile file, Long toolId, String version, String description, String uploader) {
+    public ToolFile uploadFile(MultipartFile file, Long toolId, String version, String architecture, String description, String uploader) {
         if (file.isEmpty()) {
             throw new RuntimeException("文件不能为空");
+        }
+        
+        // 校验版本号格式
+        if (!StringUtils.hasText(version)) {
+            throw new RuntimeException("版本号不能为空");
+        }
+        if (!SemanticVersionUtil.isValidSemanticVersion(version)) {
+            throw new RuntimeException("版本号格式不正确，必须符合语义化版本规范（如：1.0.0）");
         }
         
         // 获取工具信息
@@ -103,17 +113,32 @@ public class FileManagementServiceImpl extends ServiceImpl<ToolFileMapper, ToolF
                 fileName = safeFileName;
             }
             
-            // 根据工具类型和名称分目录存储
-            // 文件路径格式: {toolType}/{toolName}/{fileName}
-            // 工具名称需要进行文件名安全化处理
+            // 根据工具类型、名称、版本号和架构分目录存储
+            // 文件路径格式: {toolType}/{toolName}/{version}/{architecture}/{fileName}
+            // 如果没有架构，则: {toolType}/{toolName}/{version}/{fileName}
             String toolType = sanitizeFileName(tool.getType() != null ? tool.getType() : "default");
             String toolName = sanitizeFileName(tool.getName());
+            String safeVersion = sanitizeFileName(version);
             
-            // URL路径：使用正斜杠（用于数据库存储和URL访问）
-            String urlPath = toolType + "/" + toolName;
+            // 构建URL路径：使用正斜杠（用于数据库存储和URL访问）
+            StringBuilder urlPathBuilder = new StringBuilder();
+            urlPathBuilder.append(toolType).append("/").append(toolName).append("/").append(safeVersion);
             
-            // 文件系统路径：使用系统分隔符（用于实际文件存储）
-            String relativePath = toolType + File.separator + toolName;
+            // 构建文件系统路径：使用系统分隔符（用于实际文件存储）
+            StringBuilder relativePathBuilder = new StringBuilder();
+            relativePathBuilder.append(toolType).append(File.separator)
+                              .append(toolName).append(File.separator)
+                              .append(safeVersion);
+            
+            // 如果提供了架构，添加架构层级
+            if (StringUtils.hasText(architecture)) {
+                String safeArchitecture = sanitizeFileName(architecture);
+                urlPathBuilder.append("/").append(safeArchitecture);
+                relativePathBuilder.append(File.separator).append(safeArchitecture);
+            }
+            
+            String urlPath = urlPathBuilder.toString();
+            String relativePath = relativePathBuilder.toString();
             String fullPath = uploadPath + File.separator + relativePath;
             
             // 创建目录
@@ -127,8 +152,8 @@ public class FileManagementServiceImpl extends ServiceImpl<ToolFileMapper, ToolF
             Path filePath = Paths.get(fullPath, fileName);
             Files.copy(file.getInputStream(), filePath);
             
-            logger.info("工具文件上传成功 - 工具: {}/{}, 文件名: {}, 大小: {} bytes", 
-                       toolType, toolName, originalFilename, file.getSize());
+            logger.info("工具文件上传成功 - 工具: {}/{}, 版本: {}, 架构: {}, 文件名: {}, 大小: {} bytes", 
+                       toolType, toolName, version, architecture != null ? architecture : "无", originalFilename, file.getSize());
             
             // 保存文件信息到数据库
             ToolFile toolFile = new ToolFile();
@@ -140,6 +165,7 @@ public class FileManagementServiceImpl extends ServiceImpl<ToolFileMapper, ToolF
             toolFile.setFileSize(file.getSize());
             toolFile.setFileType(file.getContentType());
             toolFile.setVersion(version);
+            toolFile.setArchitecture(architecture);
             toolFile.setDescription(description);
             toolFile.setUploader(uploader);
             toolFile.setDownloadCount(0);
