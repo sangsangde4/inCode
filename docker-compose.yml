@@ -1,6 +1,6 @@
 # Docker Compose v1 格式
 mysql:
-  image: 10.90.8.250:81/web_container/mysql:latest
+  image: 10.190.194.250:81/web_container/mysql:latest
   container_name: tool-dashboard-mysql
   restart: always
   environment:
