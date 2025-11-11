@@ -131,4 +131,51 @@ public class ToolServiceImpl extends ServiceImpl<ToolMapper, Tool> implements To
         // 如果找到了文件中的最新版本，返回它；否则返回工具的当前版本
         return latestVersion != null ? latestVersion : tool.getCurrentVersion();
     }
+
+    @Override
+    public List<String> getAllVersions(String toolName) {
+        if (!StringUtils.hasText(toolName)) {
+            return Collections.emptyList();
+        }
+        // 查工具
+        LambdaQueryWrapper<Tool> toolWrapper = new LambdaQueryWrapper<>();
+        toolWrapper.eq(Tool::getName, toolName);
+        Tool tool = this.getOne(toolWrapper);
+        if (tool == null) {
+            return Collections.emptyList();
+        }
+        // 查文件版本
+        LambdaQueryWrapper<ToolFile> fileWrapper = new LambdaQueryWrapper<>();
+        fileWrapper.eq(ToolFile::getToolId, tool.getId())
+                   .isNotNull(ToolFile::getVersion);
+        List<ToolFile> toolFiles = toolFileMapper.selectList(fileWrapper);
+
+        // 使用 TreeSet + 语义化版本比较器，按版本从高到低排序并去重
+        Set<String> versions = new TreeSet<>((a, b) -> {
+            if (a == null && b == null) return 0;
+            if (a == null) return 1;
+            if (b == null) return -1;
+            if (SemanticVersionUtil.isValidSemanticVersion(a) && SemanticVersionUtil.isValidSemanticVersion(b)) {
+                // 高版本排在前面
+                return -Integer.signum(SemanticVersionUtil.compareVersions(a, b));
+            }
+            return a.compareTo(b);
+        });
+
+        if (toolFiles != null) {
+            for (ToolFile f : toolFiles) {
+                String v = f.getVersion();
+                if (SemanticVersionUtil.isValidSemanticVersion(v)) {
+                    versions.add(v);
+                }
+            }
+        }
+
+        // 如无文件版本但工具有当前版本，则返回当前版本
+        if (versions.isEmpty() && StringUtils.hasText(tool.getCurrentVersion())) {
+            versions.add(tool.getCurrentVersion());
+        }
+
+        return new ArrayList<>(versions);
+    }
 }

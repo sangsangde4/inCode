@@ -14,10 +14,11 @@ import './styles/table-enhancement.css'
 
 const app = createApp(App)
 
-// 注册所有图标
+// 全局注册所有 Element Plus 图标（回退恢复）
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
+
 
 const pinia = createPinia()
 app.use(pinia)

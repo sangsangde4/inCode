@@ -107,4 +107,14 @@ public class ToolController {
         }
         return Result.success(latestVersion);
     }
+
+    /**
+     * 获取指定工具的历史所有版本（公开接口）
+     * 按语义化版本从高到低排序，去重
+     */
+    @GetMapping("/versions")
+    public Result<List<String>> getAllVersions(@RequestParam String toolName) {
+        List<String> versions = toolService.getAllVersions(toolName);
+        return Result.success(versions);
+    }
 }

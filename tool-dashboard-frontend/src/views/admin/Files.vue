@@ -12,11 +12,12 @@
     </div>
 
     <el-card class="table-card" shadow="never">
-      <FileBrowser 
-        :files="tableData" 
+      <FileBrowser
+        :files="tableData"
         :loading="loading"
         @download="handleDownload"
         @delete="handleDelete"
+        @deleteFolder="handleDeleteFolder"
       />
     </el-card>
 
@@ -51,32 +52,38 @@
         <el-form-item label="文件说明" prop="description">
           <el-input v-model="form.description" type="textarea" :rows="3" />
         </el-form-item>
-        <el-form-item label="选择文件" prop="file">
+        <el-form-item label="选择文件" prop="files">
           <el-upload
             ref="uploadRef"
             :auto-upload="false"
-            :limit="1"
+            multiple
+            :limit="FILE_COUNT.MAX_FILES"
             :on-change="handleFileChange"
             :file-list="fileList"
+            :on-remove="handleFileRemove"
+            :on-exceed="handleExceed"
+            :show-file-list="true"
+            list-type="text"
           >
             <el-button type="primary">选择文件</el-button>
             <template #tip>
               <div class="el-upload__tip">
-                支持最大2GB文件上传
+                <div>📁 支持批量上传，最多一次选择10个文件</div>
+                <div>📏 单个文件最大 <strong>2GB</strong></div>
+                <div>📦 总大小最大 <strong>10GB</strong></div>
               </div>
             </template>
           </el-upload>
         </el-form-item>
-        <el-form-item v-if="uploading && uploadProgress > 0">
-          <el-progress 
-            :percentage="uploadProgress" 
+        <el-form-item v-if="uploading">
+          <el-progress
+            type="line"
+            :percentage="uploadProgress"
             :status="uploadProgress === 100 ? 'success' : undefined"
-            :stroke-width="20"
-          >
-            <template #default="{ percentage }">
-              <span class="percentage-value">{{ percentage }}%</span>
-            </template>
-          </el-progress>
+            :stroke-width="16"
+            :show-text="true"
+            style="width: 100%"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -92,10 +99,11 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadFile } from 'element-plus'
-import { getFilePage, uploadFile, deleteFile } from '@/api/file'
+import {getFilePage, uploadFile, uploadFiles, deleteFile, deleteFolder} from '@/api/file'
 import { getToolList } from '@/api/tool'
 import { useUserStore } from '@/stores/user'
 import { createVersionValidationRule } from '@/utils/semanticVersion'
+import { FILE_SIZE, FILE_COUNT, formatFileSize } from '@/config/uploadLimits'
 import FileBrowser from '@/components/FileBrowser.vue'
 import type { ToolFile, Tool } from '@/types'
 
@@ -115,13 +123,13 @@ const form = reactive({
   version: '',
   architecture: '',
   description: '',
-  file: null as File | null
+  files: [] as File[]
 })
 
 const rules: FormRules = {
   toolId: [{ required: true, message: '请选择工具', trigger: 'change' }],
   version: [createVersionValidationRule(true)], // 版本号必填
-  file: [{ required: true, message: '请选择文件', trigger: 'change' }]
+  files: [{ required: true, message: '请选择文件', trigger: 'change' }]
 }
 
 const loadData = async () => {
@@ -153,26 +161,75 @@ const loadTools = async () => {
   }
 }
 
-const handleFileChange = (file: UploadFile) => {
-  form.file = file.raw || null
-  fileList.value = [file]
+const handleFileChange = (file: UploadFile, fileListArg?: UploadFile[]) => {
+  // 同步 element-plus 的文件列表
+  if (fileListArg) {
+    fileList.value = fileListArg
+  }
+  // 收集原生 File 列表
+  form.files = fileList.value
+    .map(f => f.raw)
+    .filter((f): f is File => !!f)
+  
+  // 验证文件大小
+  validateFileSizes()
+}
+
+const validateFileSizes = () => {
+  // 检查单个文件大小
+  for (const file of form.files) {
+    if (file.size > FILE_SIZE.MAX_FILE_SIZE) {
+      const fileSize = formatFileSize(file.size)
+      const maxSize = formatFileSize(FILE_SIZE.MAX_FILE_SIZE)
+      ElMessage.error(`文件 "${file.name}" 大小为 ${fileSize}，超过限制！单个文件最大 ${maxSize}`)
+      return false
+    }
+  }
+  
+  // 检查总大小
+  const totalSize = form.files.reduce((sum, file) => sum + file.size, 0)
+  if (totalSize > FILE_SIZE.MAX_TOTAL_SIZE) {
+    const currentTotal = formatFileSize(totalSize)
+    const maxTotal = formatFileSize(FILE_SIZE.MAX_TOTAL_SIZE)
+    ElMessage.error(`所有文件总大小为 ${currentTotal}，超过限制！总大小最大 ${maxTotal}`)
+    return false
+  }
+  
+  return true
+}
+
+const handleFileRemove = (file: UploadFile, fileListArg: UploadFile[]) => {
+  fileList.value = fileListArg
+  form.files = fileList.value
+    .map(f => f.raw)
+    .filter((f): f is File => !!f)
+}
+
+const handleExceed = () => {
+  ElMessage.warning(`一次最多选择 ${FILE_COUNT.MAX_FILES} 个文件`)
 }
 
 const handleSubmit = async () => {
   if (!formRef.value) return
-  
+
   await formRef.value.validate(async (valid) => {
     if (!valid) return
-    
-    if (!form.file) {
+
+    if (!form.files || form.files.length === 0) {
       ElMessage.error('请选择文件')
       return
     }
     
+    // 验证文件大小
+    if (!validateFileSizes()) {
+      return
+    }
+
     uploading.value = true
     try {
       const formData = new FormData()
-      formData.append('file', form.file)
+      // 多文件字段名为 files，对应后端 @RequestParam("files")
+      form.files.forEach(f => formData.append('files', f))
       formData.append('toolId', String(form.toolId))
       formData.append('version', form.version)
       if (form.architecture) {
@@ -180,9 +237,9 @@ const handleSubmit = async () => {
       }
       formData.append('description', form.description)
       formData.append('uploader', userStore.realName)
-      
-      // 上传文件并显示进度
-      await uploadFile(formData, (progressEvent: any) => {
+
+      // 批量上传并显示整体进度
+      await uploadFiles(formData, (progressEvent: any) => {
         if (progressEvent.total) {
           uploadProgress.value = Math.round((progressEvent.loaded * 100) / progressEvent.total)
         }
@@ -204,7 +261,7 @@ const resetForm = () => {
   form.version = ''
   form.architecture = ''
   form.description = ''
-  form.file = null
+  form.files = []
   fileList.value = []
   uploadProgress.value = 0
   formRef.value?.clearValidate()
@@ -219,12 +276,12 @@ const handleDownload = (row: ToolFile) => {
   if (row.downloadUrlByPath) {
     window.open(row.downloadUrlByPath, '_blank')
     console.log('使用路径下载:', row.downloadUrlByPath)
-  } 
+  }
   // 降级使用ID下载URL
   else if (row.downloadUrl) {
     window.open(row.downloadUrl, '_blank')
     console.log('使用ID下载:', row.downloadUrl)
-  } 
+  }
   // 兜底：使用ID构建下载URL
   else if (row.id) {
     window.open(`/api/files/download/${row.id}`, '_blank')
@@ -246,6 +303,22 @@ const handleDelete = (row: ToolFile) => {
       loadData()
     } catch (error) {
       console.error('删除失败', error)
+    }
+  })
+}
+
+const handleDeleteFolder = (urlPath: string) => {
+  ElMessageBox.confirm(`确定要删除该文件夹及其下所有文件吗？\n${urlPath}`, '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      await deleteFolder(urlPath)
+      ElMessage.success('文件夹删除成功')
+      loadData()
+    } catch (error) {
+      console.error('删除文件夹失败', error)
     }
   })
 }

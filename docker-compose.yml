@@ -13,7 +13,7 @@ mysql:
     - "${MYSQL_PORT}:3306"
   volumes:
     - mysql_data:/var/lib/mysql
-    - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    - ./db:/docker-entrypoint-initdb.d:ro
   command:
     - --character-set-server=utf8mb4
     - --collation-server=utf8mb4_unicode_ci

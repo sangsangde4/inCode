@@ -39,10 +39,16 @@ service.interceptors.response.use(
     if (res.code !== 200) {
       ElMessage.error(res.message || '请求失败')
       
-      // 401: 未登录
+      // 401: 未登录 → 带上当前地址做回跳
       if (res.code === 401) {
         localStorage.removeItem('token')
-        window.location.href = '/login'
+        try {
+          const current = window.location.pathname + window.location.search + window.location.hash
+          const redirect = encodeURIComponent(current)
+          window.location.href = `/login?redirect=${redirect}`
+        } catch {
+          window.location.href = '/login'
+        }
       }
       
       return Promise.reject(new Error(res.message || '请求失败'))
@@ -52,6 +58,19 @@ service.interceptors.response.use(
   },
   (error) => {
     console.error('响应错误：', error)
+    // 处理 HTTP 401（如网关直返401或非标准返回体）
+    const status = error?.response?.status
+    if (status === 401) {
+      localStorage.removeItem('token')
+      try {
+        const current = window.location.pathname + window.location.search + window.location.hash
+        const redirect = encodeURIComponent(current)
+        window.location.href = `/login?redirect=${redirect}`
+      } catch {
+        window.location.href = '/login'
+      }
+      return Promise.reject(error)
+    }
     ElMessage.error(error.message || '网络错误')
     return Promise.reject(error)
   }

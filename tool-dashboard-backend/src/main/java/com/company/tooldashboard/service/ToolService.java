@@ -34,4 +34,10 @@ public interface ToolService extends IService<Tool> {
      * @return 最新版本号，如果工具不存在或没有版本信息则返回null
      */
     String getLatestVersion(String toolName);
+
+    /**
+     * 获取指定工具的所有历史版本（按语义化版本从高到低排序，去重）
+     * 如果该工具没有上传过文件版本，则在有当前版本时返回该当前版本
+     */
+    List<String> getAllVersions(String toolName);
 }

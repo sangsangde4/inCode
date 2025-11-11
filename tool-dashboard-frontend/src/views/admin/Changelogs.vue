@@ -13,7 +13,7 @@
 
     <el-card class="table-card" shadow="never">
 
-      <el-table :data="tableData" v-loading="loading" stripe>
+      <el-table :data="tableData" v-loading="loading" stripe border :resizable="true">
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="toolId" label="工具ID" width="100" />
         <el-table-column prop="version" label="版本" width="120" />

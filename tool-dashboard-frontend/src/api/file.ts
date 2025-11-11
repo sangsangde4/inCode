@@ -22,9 +22,25 @@ export const uploadFile = (formData: FormData, onUploadProgress?: (progressEvent
   })
 }
 
+// 批量上传文件（支持进度回调，返回列表）
+export const uploadFiles = (formData: FormData, onUploadProgress?: (progressEvent: any) => void) => {
+  return request.post<ToolFile[]>('/files/uploads', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+    timeout: 600000,
+    onUploadProgress
+  })
+}
+
 // 删除文件
 export const deleteFile = (id: number) => {
   return request.delete(`/files/${id}`)
+}
+
+// 删除文件夹（path 为 URL 风格前缀，如 platform/toolA/1.0.0 或 platform/toolA/1.0.0/linux_x64）
+export const deleteFolder = (path: string) => {
+  return request.delete('/files/folder', { params: { path } })
 }
 
 // 获取文件下载地址（通过ID）

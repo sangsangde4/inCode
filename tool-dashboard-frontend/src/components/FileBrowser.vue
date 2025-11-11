@@ -13,7 +13,7 @@
     </el-breadcrumb>
 
     <!-- 文件列表 -->
-    <el-table :data="currentItems" v-loading="loading" stripe class="file-table">
+    <el-table :data="currentItems" v-loading="loading" stripe border :resizable="true" class="file-table">
       <el-table-column label="名称" min-width="300">
         <template #default="{ row }">
           <div class="file-item" @click="handleItemClick(row)">
@@ -35,7 +35,7 @@
           <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="200" fixed="right">
+      <el-table-column label="操作" width="260" fixed="right">
         <template #default="{ row }">
           <template v-if="!row.isFolder">
             <el-button type="primary" link @click.stop="handleDownload(row)">下载</el-button>
@@ -67,7 +67,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits(['download', 'delete'])
+const emit = defineEmits(['download', 'delete', 'deleteFolder'])
 
 const currentPath = ref<string[]>([])
 
@@ -178,6 +178,17 @@ const handleDelete = (item: FileItem) => {
   if (item.fileData) {
     emit('delete', item.fileData)
   }
+}
+
+// 处理删除文件夹
+const handleDeleteFolder = (item: FileItem) => {
+  // 计算当前文件夹的URL风格路径：currentPath + item.name
+  const folderParts = [...currentPath.value, item.name]
+  // 跳过前置层级（如果配置了 skipLevels）
+  const start = props.skipLevels || 0
+  const parts = folderParts.slice(start)
+  const urlPath = parts.join('/')
+  emit('deleteFolder', urlPath)
 }
 
 // 监听files变化，重置路径

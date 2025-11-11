@@ -20,7 +20,7 @@ spring:
     multipart:
       enabled: true
       max-file-size: 2GB       # 单个文件最大2GB
-      max-request-size: 2GB    # 单次请求最大2GB
+      max-request-size: 10GB   # 单次请求最大10GB（支持多文件上传）
       file-size-threshold: 10MB # 超过10MB使用临时文件
       location: ${java.io.tmpdir}/upload-temp  # 临时文件目录
 

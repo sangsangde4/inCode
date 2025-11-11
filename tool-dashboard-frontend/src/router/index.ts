@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -59,9 +60,11 @@ router.beforeEach((to, from, next) => {
   
   // 检查是否需要登录
   if (to.meta.requireAuth) {
-    const token = localStorage.getItem('token')
+    const userStore = useUserStore()
+    const token = userStore.token || localStorage.getItem('token')
     if (!token) {
-      next('/login')
+      const redirect = encodeURIComponent(to.fullPath)
+      next(`/login?redirect=${redirect}`)
       return
     }
   }

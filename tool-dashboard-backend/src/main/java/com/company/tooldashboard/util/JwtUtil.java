@@ -61,6 +61,18 @@ public class JwtUtil {
     }
     
     /**
+     * 获取Token的过期时间戳（毫秒）
+     */
+    public Long getExpirationTime(String token) {
+        try {
+            Claims claims = parseToken(token);
+            return claims.getExpiration().getTime();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    /**
      * 解析Token
      */
     private Claims parseToken(String token) {

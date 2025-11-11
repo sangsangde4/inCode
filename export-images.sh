@@ -179,6 +179,16 @@ cp deploy.sh "$OUTPUT_DIR/" 2>/dev/null || true
 cp backup.sh "$OUTPUT_DIR/" 2>/dev/null || true
 cp health-check.sh "$OUTPUT_DIR/" 2>/dev/null || true
 cp DEPLOYMENT_GUIDE.md "$OUTPUT_DIR/" 2>/dev/null || true
+cp DATABASE_INIT.md "$OUTPUT_DIR/" 2>/dev/null || true
+
+# 复制数据库初始化脚本
+if [ -d "db" ]; then
+    print_info "复制数据库初始化脚本..."
+    cp -r db "$OUTPUT_DIR/"
+    print_info "✓ 已复制 db 文件夹（包含数据库初始化脚本）"
+else
+    print_warn "db 文件夹不存在，跳过数据库初始化脚本复制"
+fi
 
 # 创建导入脚本
 cat > "$OUTPUT_DIR/import-images.sh" << 'IMPORT_EOF'
@@ -265,12 +275,14 @@ cat > "$OUTPUT_DIR/OFFLINE_DEPLOYMENT.md" << 'README_EOF'
 
 - `tool-dashboard-images_*.tar.gz` - Docker镜像包（x86_64/amd64 架构）
 - `import-images.sh` - 镜像导入脚本
-- `docker-compose.yml` - Docker编排配置
+- `docker-compose.yml` - Docker编排配置（已配置数据库自动初始化）
 - `deploy.sh` - 部署管理脚本
 - `backup.sh` - 数据备份脚本
 - `health-check.sh` - 健康检查脚本
 - `.env.example` - 环境变量模板
+- `db/` - 数据库初始化脚本目录（包含 schema.sql）
 - `DEPLOYMENT_GUIDE.md` - 详细部署文档
+- `DATABASE_INIT.md` - 数据库初始化配置说明
 
 **⚠️ 重要**: 此镜像包专为 **x86_64/amd64 架构** 构建，适用于：
 - Intel/AMD 处理器的服务器
@@ -355,8 +367,21 @@ sudo systemctl restart docker
 # 初始化项目
 ./deploy.sh init
 
-# 启动所有服务
+# 启动所有服务（首次启动会自动初始化数据库）
 ./deploy.sh start
+```
+
+**📌 数据库自动初始化说明：**
+
+MySQL 容器在**首次启动**时会自动执行 `db/` 目录下的初始化脚本：
+- ✅ 自动创建数据库和表结构
+- ✅ 自动插入默认管理员账号
+- ✅ 只在首次部署时执行一次
+
+**注意**：如果需要重新初始化数据库，需要删除数据卷：
+```bash
+docker-compose down -v  # 删除容器和数据卷
+./deploy.sh start       # 重新启动，会再次执行初始化
 ```
 
 ### 5. 访问系统

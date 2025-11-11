@@ -70,15 +70,15 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useThemeStore } from '@/stores/theme'
 import { ElMessage } from 'element-plus'
-import { Sunny, Moon } from '@element-plus/icons-vue'
+import { Sunny, Moon, Tools, Document, Tickets } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 const themeStore = useThemeStore()
 
-const handleLogout = () => {
-  userStore.logout()
+const handleLogout = async () => {
+  await userStore.logout()
   ElMessage.success('已退出登录')
   router.push('/login')
 }

@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.UUID;
 
 /**
@@ -53,6 +54,63 @@ public class FileManagementServiceImpl extends ServiceImpl<ToolFileMapper, ToolF
         return files;
     }
     
+    @Override
+    public int deleteFolderByUrlPath(String urlPrefixPath) {
+        if (!StringUtils.hasText(urlPrefixPath)) {
+            throw new RuntimeException("路径不能为空");
+        }
+        // 统一为正斜杠
+        String normalized = urlPrefixPath.replace("\\", "/");
+        if (normalized.startsWith("/")) {
+            normalized = normalized.substring(1);
+        }
+        // 查询以该前缀开头的文件记录
+        LambdaQueryWrapper<ToolFile> wrapper = new LambdaQueryWrapper<>();
+        wrapper.likeRight(ToolFile::getFilePath, normalized.endsWith("/") ? normalized : normalized + "/");
+        List<ToolFile> list = this.list(wrapper);
+
+        int deleted = 0;
+        for (ToolFile tf : list) {
+            try {
+                Path path = Paths.get(uploadPath, tf.getFilePath().replace("/", java.io.File.separator));
+                java.io.File file = path.toFile();
+                if (file.exists()) {
+                    file.delete();
+                }
+                this.removeById(tf.getId());
+                deleted++;
+            } catch (Exception e) {
+                logger.warn("删除文件失败但继续: {}", tf.getFilePath(), e);
+            }
+        }
+
+        // 同时尝试删除空目录（容错）
+        try {
+            Path dir = Paths.get(uploadPath, normalized.replace("/", java.io.File.separator));
+            deleteDirectoryIfEmptyRecursive(dir);
+        } catch (Exception e) {
+            logger.debug("清理目录失败: {}", e.getMessage());
+        }
+
+        return deleted;
+    }
+
+    private void deleteDirectoryIfEmptyRecursive(Path dir) {
+        if (dir == null || !java.nio.file.Files.exists(dir)) return;
+        java.io.File folder = dir.toFile();
+        java.io.File[] children = folder.listFiles();
+        if (children == null) return;
+        for (java.io.File child : children) {
+            if (child.isDirectory()) {
+                deleteDirectoryIfEmptyRecursive(child.toPath());
+            }
+        }
+        // 尝试删除空目录
+        children = folder.listFiles();
+        if (children != null && children.length == 0) {
+            folder.delete();
+        }
+    }
     @Override
     public Page<ToolFile> getFilePage(Integer pageNum, Integer pageSize, Long toolId) {
         Page<ToolFile> page = new Page<>(pageNum, pageSize);
@@ -179,6 +237,18 @@ public class FileManagementServiceImpl extends ServiceImpl<ToolFileMapper, ToolF
             logger.error("工具文件上传失败 - 工具ID: {}, 原因: {}", toolId, e.getMessage(), e);
             throw new RuntimeException("文件上传失败：" + e.getMessage());
         }
+    }
+    
+    @Override
+    public List<ToolFile> uploadFiles(List<MultipartFile> files, Long toolId, String version, String architecture, String description, String uploader) {
+        if (files == null || files.isEmpty()) {
+            throw new RuntimeException("文件不能为空");
+        }
+        List<ToolFile> results = new ArrayList<>();
+        for (MultipartFile file : files) {
+            results.add(uploadFile(file, toolId, version, architecture, description, uploader));
+        }
+        return results;
     }
     
     /**

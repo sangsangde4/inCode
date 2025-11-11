@@ -13,13 +13,13 @@
 
     <el-card class="table-card" shadow="never">
 
-      <el-table :data="tableData" v-loading="loading" stripe>
+      <el-table :data="tableData" v-loading="loading" stripe border :resizable="true">
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="name" label="工具名称" />
         <el-table-column prop="type" label="类型" width="120" />
         <el-table-column prop="currentVersion" label="版本" width="100" />
         <el-table-column prop="owner" label="负责人" width="120" />
-        <el-table-column prop="status" label="状态" width="100">
+        <el-table-column prop="status" label="状态" width="120">
           <template #default="{ row }">
             <el-tag :type="getStatusType(row.status)">
               {{ getStatusText(row.status) }}
@@ -132,6 +132,7 @@ import { Plus } from '@element-plus/icons-vue'
 import { getToolPage, addTool, updateTool, deleteTool } from '@/api/tool'
 import { uploadIcon } from '@/api/upload'
 import { createVersionValidationRule } from '@/utils/semanticVersion'
+import { FILE_SIZE, formatFileSize } from '@/config/uploadLimits'
 import type { Tool } from '@/types'
 
 const loading = ref(false)
@@ -287,14 +288,16 @@ const handleDelete = (row: Tool) => {
 // 图标上传前验证
 const beforeIconUpload = (file: File) => {
   const isImage = file.type.startsWith('image/')
-  const isLt2M = file.size / 1024 / 1024 < 2
+  const isValidSize = file.size <= FILE_SIZE.MAX_ICON_SIZE
 
   if (!isImage) {
     ElMessage.error('只能上传图片文件！')
     return false
   }
-  if (!isLt2M) {
-    ElMessage.error('图片大小不能超过2MB！')
+  if (!isValidSize) {
+    const fileSize = formatFileSize(file.size)
+    const maxSize = formatFileSize(FILE_SIZE.MAX_ICON_SIZE)
+    ElMessage.error(`图片大小为 ${fileSize}，超过限制！最大 ${maxSize}`)
     return false
   }
   return true
@@ -403,6 +406,11 @@ onMounted(() => {
   background: var(--card-bg) !important;
   border: 2px solid var(--card-border) !important;
   border-radius: 12px !important;
+}
+
+/* 防止状态标签后出现意外符号（某些全局样式/浏览器扩展可能注入伪元素） */
+.admin-tools :deep(.el-table) .el-tag::after {
+  content: none !important;
 }
 
 .pagination-wrapper {

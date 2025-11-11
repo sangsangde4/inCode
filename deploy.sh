@@ -91,6 +91,30 @@ check_env_file() {
     fi
 }
 
+# 安全加载.env（支持中文注释、去除BOM、防止set -e退出）
+load_env () {
+    if [ ! -f ".env" ]; then
+        print_warn ".env 文件不存在"
+        return
+    fi
+
+    print_info "加载环境变量..."
+    # 去掉 utf-8 bom 并只读取 key=value 格式的行
+    while IFS='=' read -r key value; do
+        # 跳过注释行和空行
+        [[ "$key" =~ ^#.*$ || -z "$key" ]] && continue
+        # 去掉可能的引号
+        value="${value%\"}"
+        value="${value#\"}"
+        value="${value%\'}"
+        value="${value#\'}"
+        # 导出环境变量
+        export "$key"="$value"
+    done < <(sed 's/^\xEF\xBB\xBF//' .env)
+    
+    print_info "环境变量加载完成"
+}
+
 # 启动服务
 start() {
     print_info "启动 Tool Dashboard 服务..."
@@ -98,7 +122,7 @@ start() {
     check_env_file
     
     # 加载环境变量
-    source .env 2>/dev/null || true
+    load_env
     
     # 检查镜像是否存在
     print_info "检查镜像..."
@@ -157,10 +181,6 @@ start() {
     print_info "📱 访问地址："
     echo "   前端: http://localhost:${FRONTEND_PORT:-80}"
     echo "   后端: http://localhost:${BACKEND_PORT:-8080}/api"
-    echo ""
-    print_info "👤 默认账号："
-    echo "   用户名: admin"
-    echo "   密码: admin123"
     echo ""
     print_info "📊 常用命令："
     echo "   查看日志: ./deploy.sh logs"

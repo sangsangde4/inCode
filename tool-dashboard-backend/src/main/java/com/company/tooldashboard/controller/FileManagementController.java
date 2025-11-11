@@ -216,6 +216,27 @@ public class FileManagementController {
     }
     
     /**
+     * 批量上传工具文件（需要管理员权限）
+     */
+    @RequireAdmin
+    @PostMapping("/files/uploads")
+    public Result<List<ToolFile>> uploadToolFiles(
+            @RequestParam("files") List<MultipartFile> files,
+            @RequestParam Long toolId,
+            @RequestParam(required = false) String version,
+            @RequestParam(required = false) String architecture,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) String uploader) {
+        try {
+            List<ToolFile> list = fileManagementService.uploadFiles(files, toolId, version, architecture, description, uploader);
+            return Result.success(list);
+        } catch (Exception e) {
+            logger.error("批量上传工具文件失败", e);
+            return Result.error(e.getMessage());
+        }
+    }
+    
+    /**
      * 删除工具文件（需要管理员权限）
      */
     @RequireAdmin
@@ -239,6 +260,26 @@ public class FileManagementController {
             fileManagementService.removeById(id);
         }
         return Result.success();
+    }
+
+    /**
+     * 删除文件夹（需要管理员权限）
+     * 通过URL风格路径前缀删除其下所有文件记录与物理文件
+     * 例如: platform/toolA/1.0.0 或 platform/toolA/1.0.0/linux_x64
+     */
+    @RequireAdmin
+    @DeleteMapping("/files/folder")
+    public Result<Map<String, Object>> deleteFolder(@RequestParam("path") String path) {
+        try {
+            int count = fileManagementService.deleteFolderByUrlPath(path);
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("deleted", count);
+            resp.put("path", path);
+            return Result.success(resp);
+        } catch (Exception e) {
+            logger.error("删除文件夹失败, path={}", path, e);
+            return Result.error(e.getMessage());
+        }
     }
     
     // ==================== 图标文件管理接口 ====================

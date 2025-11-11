@@ -31,6 +31,18 @@ public interface FileManagementService extends IService<ToolFile> {
     ToolFile uploadFile(MultipartFile file, Long toolId, String version, String architecture, String description, String uploader);
     
     /**
+     * 批量上传文件
+     */
+    List<ToolFile> uploadFiles(List<MultipartFile> files, Long toolId, String version, String architecture, String description, String uploader);
+
+    /**
+     * 删除文件夹（根据URL风格的路径前缀），会删除该文件夹下所有文件记录与物理文件
+     * 例如: platform/toolA/1.0.0 或 platform/toolA/1.0.0/linux_x64
+     * 返回删除的文件数量
+     */
+    int deleteFolderByUrlPath(String urlPrefixPath);
+    
+    /**
      * 增加下载次数
      */
     void increaseDownloadCount(Long fileId);
