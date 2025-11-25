@@ -15,6 +15,7 @@
       <FileBrowser
         :files="tableData"
         :loading="loading"
+        :isAdmin="true"
         @download="handleDownload"
         @delete="handleDelete"
         @deleteFolder="handleDeleteFolder"
@@ -170,7 +171,7 @@ const handleFileChange = (file: UploadFile, fileListArg?: UploadFile[]) => {
   form.files = fileList.value
     .map(f => f.raw)
     .filter((f): f is File => !!f)
-  
+
   // 验证文件大小
   validateFileSizes()
 }
@@ -185,7 +186,7 @@ const validateFileSizes = () => {
       return false
     }
   }
-  
+
   // 检查总大小
   const totalSize = form.files.reduce((sum, file) => sum + file.size, 0)
   if (totalSize > FILE_SIZE.MAX_TOTAL_SIZE) {
@@ -194,7 +195,7 @@ const validateFileSizes = () => {
     ElMessage.error(`所有文件总大小为 ${currentTotal}，超过限制！总大小最大 ${maxTotal}`)
     return false
   }
-  
+
   return true
 }
 
@@ -219,7 +220,7 @@ const handleSubmit = async () => {
       ElMessage.error('请选择文件')
       return
     }
-    
+
     // 验证文件大小
     if (!validateFileSizes()) {
       return

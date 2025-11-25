@@ -39,6 +39,10 @@
         <template #default="{ row }">
           <template v-if="!row.isFolder">
             <el-button type="primary" link @click.stop="handleDownload(row)">下载</el-button>
+            <el-button v-if="isAdmin" type="danger"link @click.stop="handleDelete(row)">删除</el-button>
+          </template>
+          <template v-if="row.isFolder && isAdmin">
+            <el-button type="danger" link @click.stop="handleDeleteFolder(row)">删除文件夹</el-button>
           </template>
         </template>
       </el-table-column>
@@ -64,6 +68,7 @@ interface Props {
   files: ToolFile[]
   loading?: boolean
   skipLevels?: number  // 跳过前面几层路径，默认0（显示全部）
+  isAdmin?: boolean
 }
 
 const props = defineProps<Props>()

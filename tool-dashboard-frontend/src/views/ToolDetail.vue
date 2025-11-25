@@ -31,7 +31,7 @@
           <div class="tool-info">
             <div class="tool-title-row">
               <h2>{{ tool.name }}</h2>
-              <el-tag 
+              <el-tag
                 :type="getStatusType(tool.status)"
                 size="large"
                 class="status-tag"
@@ -82,9 +82,10 @@
                 <el-badge :value="files.length" class="tab-badge" v-if="files.length > 0" />
               </div>
             </template>
-            <FileBrowser 
-              :files="files" 
+            <FileBrowser
+              :files="files"
               :loading="filesLoading"
+              :isAdmin="false"
               :skip-levels="2"
               @download="downloadFile"
             />
@@ -225,7 +226,7 @@ const downloadFile = (fileOrId: ToolFile | number) => {
   if (typeof fileOrId === 'object' && fileOrId.downloadUrlByPath) {
     window.open(fileOrId.downloadUrlByPath, '_blank')
     console.log('使用路径下载:', fileOrId.downloadUrlByPath)
-  } 
+  }
   // 如果传入的是ID或没有路径下载URL，使用ID下载
   else {
     const id = typeof fileOrId === 'number' ? fileOrId : fileOrId.id!
@@ -583,16 +584,16 @@ onMounted(() => {
     flex-direction: column;
     gap: 20px;
   }
-  
+
   .tool-title-row {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .tool-info h2 {
     font-size: 24px;
   }
-  
+
   .tool-meta {
     flex-direction: column;
     align-items: flex-start;
